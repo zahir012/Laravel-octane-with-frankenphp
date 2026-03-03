@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # FrankenPHP + Laravel Octane
+  app:
+    build:
+      context: .
+      target: ${DOCKER_TARGET:-development}  # development or production
+      dockerfile: Dockerfile
+    container_name: laravel-frankenphp
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"  # Map host port to container port 80
+    environment:
+      # FrankenPHP configuration
+      SERVER_NAME: ":80"
+      
+      # Laravel environment
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost}
+      
+      # Database configuration
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-laravel}
+      DB_USERNAME: ${DB_USERNAME:-laravel}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      
+      # Redis configuration
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      
+      # Session configuration
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      SESSION_DOMAIN: ${SESSION_DOMAIN:-localhost}
+      
+      # Octane configuration
+      OCTANE_WORKERS: ${OCTANE_WORKERS:-auto}
+      OCTANE_MAX_REQUESTS: ${OCTANE_MAX_REQUESTS:-500}
+    volumes:
+      # Mount for development (allows live code changes)
+      - .:/app
+      # Preserve vendor folder (don't override with host)
+      - /app/vendor
+      # Mount storage for persistence
+      - app-storage:/app/storage
+      # Mount custom Caddyfile
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Mount custom PHP config
+      - ./docker/php.ini:/usr/local/etc/php/conf.d/99-overrides.ini:ro
+    networks:
+      - laravel-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2019/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: laravel-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    ports:
+      - "${DB_PORT_FORWARD:-3307}:3306"  # Forward to different host port to avoid conflicts
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - laravel-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: laravel-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT_FORWARD:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - laravel-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  app-storage:
+    driver: local
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# Networks
+networks:
+  laravel-network:
+    driver: bridge

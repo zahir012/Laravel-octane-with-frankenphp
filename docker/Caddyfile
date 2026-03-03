@@ -1,0 +1,70 @@
+# Global configuration for worker mode
+{
+    # Enable FrankenPHP with worker configuration
+    frankenphp {
+        # Worker configuration - Point directly to Octane's default worker
+        worker /app/vendor/laravel/octane/bin/frankenphp-worker.php {
+            # Number of workers (auto = 2x CPU cores)
+            num_workers auto
+            
+            # Maximum requests before worker restart (prevents memory leaks)
+            max_requests 500
+            
+            # Environment variables for the worker
+            env APP_ENV {$APP_ENV}
+            env APP_DEBUG {$APP_DEBUG}
+        }
+    }
+    
+    # Global compression
+    encode zstd gzip
+    
+    # Enable metrics on default admin port
+    metrics /metrics
+}
+
+# HTTP server configuration - Main application on port 80
+:80 {
+    # Root directory
+    root * /app/public
+    
+    # PHP handling with FrankenPHP
+    php_server
+    
+    # Static file serving
+    file_server
+    
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    }
+    
+    # Logs with rotation
+    log {
+        output file /var/log/frankenphp/laravel.log {
+            roll_size 10MB
+            roll_keep 5
+            roll_keep_for 720h  # 30 days
+        }
+        format json
+    }
+}
+
+# Metrics endpoint on port 2019 with IP restriction
+:2019 {
+    # Restrict access to internal networks only
+    @metrics-allowed {
+        remote_ip 127.0.0.1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+    }
+    handle @metrics-allowed {
+        metrics /metrics
+    }
+    handle {
+        abort
+    }
+}
