@@ -1,59 +1,120 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+```markdown
+# Laravel + FrankenPHP: High-Performance Web Applications
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This repository demonstrates how to integrate **Laravel** with **FrankenPHP** via **Laravel Octane** to achieve superior performance and modern deployment workflows.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Introduction
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Laravel
+**Laravel** is a modern PHP framework designed to make web development elegant, simple, and efficient. Since its release, it has become the most popular framework in the PHP ecosystem due to its developer-friendly syntax and robust feature set.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### FrankenPHP
+**FrankenPHP** is a modern PHP application server written in Go, designed to make PHP apps faster and more efficient. Unlike traditional PHP setups (PHP-FPM) that start a new process for every request, FrankenPHP keeps your application in memory, allowing it to handle requests at lightning speeds.
 
-## Learning Laravel
+**Key Highlights:**
+* **Speed:** Benchmarks show it can be up to 3–4x faster than PHP-FPM.
+* **Simplicity:** Delivered as a single binary; no external services needed.
+* **Modern Features:** Native support for HTTP/2 & HTTP/3, automatic HTTPS, and Prometheus metrics.
+* **Worker Mode:** Boots your app once and keeps it running in memory, eliminating startup overhead.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Laravel Octane
+**Laravel Octane** supercharges your application's performance by serving it using high-powered servers like FrankenPHP, Open Swoole, or RoadRunner. Octane boots your application once, keeps it in memory, and feeds it requests at supersonic speeds.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🛠️ Installation & Setup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Follow these steps to integrate FrankenPHP into your Laravel project:
 
-### Premium Partners
+### 1. Install Laravel Octane
+Execute the following command in your Laravel project root:
+```bash
+composer require laravel/octane
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```
 
-## Contributing
+### 2. Initialize Octane
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Run the Artisan command to complete the setup:
 
-## Code of Conduct
+```bash
+php artisan octane:install
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
 
-## Security Vulnerabilities
+*When prompted, select **FrankenPHP** as your application server.*
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 3. Environment Configuration
 
-## License
+Add the following key to your `.env` file to specify the server:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```env
+OCTANE_SERVER=frankenphp
+
+```
+
+---
+
+## 🐳 Docker Deployment
+
+Use the following commands to manage your containerized environment:
+
+**Build and Start Containers:**
+
+```bash
+# New Docker versions
+docker compose up -d --build
+
+# Old Docker versions
+docker-compose up -d --build
+
+```
+
+**Monitoring & Interaction:**
+
+```bash
+# Check container logs
+docker logs -f <container-id>
+
+# Access the container shell
+docker exec -it <container-id> bash
+
+```
+
+---
+
+## 📈 Benchmarking
+
+To evaluate the performance difference between the built-in server (`php artisan serve`) and **FrankenPHP**, we use `wrk`, a high-performance HTTP benchmarking tool.
+
+### 1. Install `wrk` (Ubuntu/Debian)
+
+```bash
+sudo apt-get update
+sudo apt-get install wrk -y
+
+```
+
+### 2. Run the Benchmark
+
+Execute the following command to simulate 100 concurrent connections using 4 threads for 30 seconds:
+
+```bash
+wrk -t4 -c100 -d30s [http://127.0.0.1:80/](http://127.0.0.1:80/)
+
+```
+
+### Parameter Breakdown:
+
+| Flag | Description |
+| --- | --- |
+| `-t4` | Uses 4 CPU threads |
+| `-c100` | Maintains 100 concurrent connections |
+| `-d30s` | Test duration of 30 seconds |
+
+---
+
+> [!TIP]
+> Using **FrankenPHP Worker Mode** with Laravel Octane significantly reduces latency by avoiding the need to reload the entire framework on every request.
